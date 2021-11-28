@@ -31,7 +31,6 @@ def go(config: DictConfig):
             parameters={
                 "file_url": config["data"]["file_url"],
                 "artifact_name": "raw_data.parquet",
-                "artifact_type": "raw_data",
                 "artifact_description": "Data as downloaded"
             },
         )
@@ -69,9 +68,9 @@ def go(config: DictConfig):
             parameters={
                 "input_artifact": "preprocessed_data.csv:latest",
                 "artifact_root": "data",
-                "random_state": config["random_seed"],
-                "test_size":config["data"]["test_size"],
-                "stratify":config["data"]["stratify"], 
+                "random_state": config["main"]["random_seed"],
+                "test_size": config["data"]["test_size"],
+                "stratify": config["data"]["stratify"], 
             },
         )
 
@@ -88,7 +87,11 @@ def go(config: DictConfig):
             "main",
             parameters={
                 "train_data": "data_train.csv:latest",
-                "model_config": model_config
+                "model_config": model_config,
+                "export_artifact": config["random_forest_pipeline"]["export_artifact"],
+                "random_seed": config["main"]["random_seed"],
+                "val_size": config["data"]["val_size"],
+                "stratify": config["data"]["stratify"]
             },
         )
 
@@ -96,10 +99,10 @@ def go(config: DictConfig):
     if "evaluate" in steps_to_execute:
 
         _ = mlflow.run(
-            os.path.join(root_path, "segregate"),
+            os.path.join(root_path, "evaluate"),
             "main",
             parameters={
-                "model_export": "model_export",
+                "model_export": f'{config["random_forest_pipeline"]["export_artifact"]}:latest',
                 "test_data": "data_test.csv:latest",
             },
         )
